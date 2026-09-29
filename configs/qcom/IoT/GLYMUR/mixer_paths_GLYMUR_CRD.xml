@@ -343,6 +343,10 @@
 
     <path name="speaker-prot">
         <path name="speaker" />
+        <ctl name="WooferLeft VISENSE Switch" value="1" />
+        <ctl name="TweeterLeft VISENSE Switch" value="1" />
+        <ctl name="WooferRight VISENSE Switch" value="1" />
+        <ctl name="TweeterRight VISENSE Switch" value="1" />
         <ctl name="WSA WSA_RX0 Digital Volume" value="84" />
         <ctl name="WSA WSA_RX1 Digital Volume" value="84" />
         <ctl name="WSA2 WSA_RX0 Digital Volume" value="84" />
@@ -407,18 +411,22 @@
     </path>
 
     <path name="vi-feedback">
-        <ctl name="WSA_AIF_VI Mixer WSA_SPKR_VI_1" value="1" />
-        <ctl name="WSA_AIF_VI Mixer WSA_SPKR_VI_2" value="1" />
-        <ctl name="WSA_RX0 Digital Volume" value="84" />
-        <ctl name="WSA_RX1 Digital Volume" value="84" />
+        <ctl name="WSA WSA_AIF_VI Mixer WSA_SPKR_VI_1" value="1" />
+        <ctl name="WSA WSA_AIF_VI Mixer WSA_SPKR_VI_2" value="1" />
+        <ctl name="WSA2 WSA_AIF_VI Mixer WSA_SPKR_VI_1" value="1" />
+        <ctl name="WSA2 WSA_AIF_VI Mixer WSA_SPKR_VI_2" value="1" />
+        <ctl name="WSA WSA_RX0 Digital Volume" value="84" />
+        <ctl name="WSA WSA_RX1 Digital Volume" value="84" />
+        <ctl name="WSA2 WSA_RX0 Digital Volume" value="84" />
+        <ctl name="WSA2 WSA_RX1 Digital Volume" value="84" />
     </path>
 
     <path name="vi-feedback-mono-1">
-        <ctl name="WSA_AIF_VI Mixer WSA_SPKR_VI_1" value="1" />
+        <ctl name="WSA WSA_AIF_VI Mixer WSA_SPKR_VI_1" value="1" />
     </path>
 
     <path name="vi-feedback-mono-2">
-        <ctl name="WSA_AIF_VI Mixer WSA_SPKR_VI_2" value="1" />
+        <ctl name="WSA WSA_AIF_VI Mixer WSA_SPKR_VI_2" value="1" />
     </path>
 
     <path name="cps-feedback">
