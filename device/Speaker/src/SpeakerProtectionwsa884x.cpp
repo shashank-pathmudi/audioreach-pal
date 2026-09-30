@@ -112,6 +112,9 @@ int SpeakerProtectionwsa884x::spkrStartCalibration()
         case 2 :
             ch_info.channels = CHANNELS_2;
         break;
+        case 4 :
+            ch_info.channels = CHANNELS_4;
+        break;
         default:
             PAL_DBG(LOG_TAG, "Unsupported channel. Set default as 2");
             ch_info.channels = CHANNELS_2;
@@ -154,6 +157,9 @@ int SpeakerProtectionwsa884x::spkrStartCalibration()
         break;
         case 2 :
             calVector.push_back(std::make_pair(SPK_PRO_VI_MAP, STEREO_SPKR));
+        break;
+        case 4 :
+            calVector.push_back(std::make_pair(SPK_PRO_VI_MAP, QUAD_SPKR));
         break;
         default :
             PAL_ERR(LOG_TAG, "Unsupported channel");
@@ -243,6 +249,9 @@ int SpeakerProtectionwsa884x::spkrStartCalibration()
         break;
         case 2 :
             config.channels = CHANNELS_2;
+        break;
+        case 4 :
+            config.channels = CHANNELS_4;
         break;
         default:
             PAL_DBG(LOG_TAG, "Unsupported channel. Set default as 2");
@@ -388,6 +397,9 @@ int SpeakerProtectionwsa884x::spkrStartCalibration()
         case 2 :
             deviceRx.config.ch_info.channels = CHANNELS_2;
         break;
+        case 4 :
+            deviceRx.config.ch_info.channels = CHANNELS_4;
+        break;
         default:
             PAL_DBG(LOG_TAG, "Unsupported channel. Set default as 2");
             deviceRx.config.ch_info.channels = CHANNELS_2;
@@ -421,6 +433,9 @@ int SpeakerProtectionwsa884x::spkrStartCalibration()
         break;
         case 2 :
             calVector.push_back(std::make_pair(SPK_PRO_DEV_MAP, LEFT_RIGHT));
+        break;
+        case 4 :
+            calVector.push_back(std::make_pair(SPK_PRO_DEV_MAP, LEFT_RIGHT_QUAD));
         break;
         default :
             PAL_ERR(LOG_TAG, "Unsupported channels for speaker");
@@ -491,10 +506,20 @@ int SpeakerProtectionwsa884x::spkrStartCalibration()
 
     config.rate = SAMPLINGRATE_48K;
     config.format = PCM_FORMAT_S16_LE;
-    if (numberOfChannels > 1)
-        config.channels = CHANNELS_2;
-    else
-        config.channels = CHANNELS_1;
+    switch (numberOfChannels) {
+        case 1:
+            config.channels = CHANNELS_1;
+        break;
+        case 2:
+            config.channels = CHANNELS_2;
+        break;
+        case 4:
+            config.channels = CHANNELS_4;
+        break;
+        default:
+            PAL_INFO(LOG_ERR, "Unsupported channels %d, setting to 1", numberOfChannels);
+            config.channels = CHANNELS_1;
+    }
     config.period_size = DEFAULT_PERIOD_SIZE;
     config.period_count = DEFAULT_PERIOD_COUNT;
     config.start_threshold = 0;
@@ -790,6 +815,14 @@ int SpeakerProtectionwsa884x::viTxSetupThreadLoop()
         ch_info.ch_map[1] = PAL_CHMAP_CHANNEL_FR;
         config.channels = CHANNELS_2;
     break;
+    case 4:
+        ch_info.channels = CHANNELS_4;
+        ch_info.ch_map[0] = PAL_CHMAP_CHANNEL_FL;
+        ch_info.ch_map[1] = PAL_CHMAP_CHANNEL_FR;
+        ch_info.ch_map[2] = PAL_CHMAP_CHANNEL_LB;
+        ch_info.ch_map[3] = PAL_CHMAP_CHANNEL_RB;
+        config.channels = CHANNELS_4;
+    break;
     default:
         PAL_DBG(LOG_TAG, "Unsupported channel. Set defauly as 2");
         ch_info.channels = CHANNELS_2;
@@ -849,6 +882,9 @@ int SpeakerProtectionwsa884x::viTxSetupThreadLoop()
         break;
         case 2 :
             calVector.push_back(std::make_pair(SPK_PRO_VI_MAP, STEREO_SPKR));
+        break;
+        case 4 :
+            calVector.push_back(std::make_pair(SPK_PRO_VI_MAP, QUAD_SPKR));
         break;
         default :
             PAL_ERR(LOG_TAG, "Unsupported channel");
@@ -1448,17 +1484,30 @@ cps_dev_setup:
             rm->getDeviceInfo(PAL_DEVICE_IN_CPS_FEEDBACK, PAL_STREAM_PROXY, "", &cps_device);
 
         // Configure device attribute
-        if (cps_device.channels > 1) {
-            ch_info.channels = CHANNELS_2;
-            ch_info.ch_map[0] = PAL_CHMAP_CHANNEL_FL;
-            ch_info.ch_map[1] = PAL_CHMAP_CHANNEL_FR;
-        }
-        else {
-            ch_info.channels = CHANNELS_1;
-            if (mDeviceAttr.id == PAL_DEVICE_OUT_HANDSET)
+        switch (cps_device.channels) {
+            case 1 :
+                ch_info.channels = CHANNELS_1;
+                if (mDeviceAttr.id == PAL_DEVICE_OUT_HANDSET)
+                    ch_info.ch_map[0] = PAL_CHMAP_CHANNEL_FL;
+                else
+                    ch_info.ch_map[0] = PAL_CHMAP_CHANNEL_FR;
+            break;
+            case 2 :
+                ch_info.channels = CHANNELS_2;
                 ch_info.ch_map[0] = PAL_CHMAP_CHANNEL_FL;
-            else
-                ch_info.ch_map[0] = PAL_CHMAP_CHANNEL_FR;
+                ch_info.ch_map[1] = PAL_CHMAP_CHANNEL_FR;
+            break;
+            case 4 :
+                ch_info.channels = CHANNELS_4;
+                ch_info.ch_map[0] = PAL_CHMAP_CHANNEL_FL;
+                ch_info.ch_map[1] = PAL_CHMAP_CHANNEL_FR;
+                ch_info.ch_map[2] = PAL_CHMAP_CHANNEL_LB;
+                ch_info.ch_map[3] = PAL_CHMAP_CHANNEL_RB;
+            break;
+            default:
+                PAL_DBG(LOG_TAG, "Unsupported channel. Set default as 2");
+                ch_info.channels = CHANNELS_2;
+            break;
         }
 
         deviceCPS.config.ch_info = ch_info;
@@ -1504,6 +1553,9 @@ cps_dev_setup:
             break;
             case 2 :
                 calVector.push_back(std::make_pair(SPK_PRO_CPS_MAP, ST_SPKR));
+            break;
+            case 4 :
+                calVector.push_back(std::make_pair(SPK_PRO_CPS_MAP, ST_SPKR)); // Nothing changes between any of these KVs
             break;
             default :
                 PAL_ERR(LOG_TAG, "Unsupported channel");
@@ -1590,6 +1642,9 @@ cps_dev_setup:
             break;
             case 2 :
                 config.channels = CHANNELS_2;
+            break;
+            case 4 :
+                config.channels = CHANNELS_4;
             break;
             default :
                 PAL_DBG(LOG_TAG, "Unsupported channel. Set default as 2");
