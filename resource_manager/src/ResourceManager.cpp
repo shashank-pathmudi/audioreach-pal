@@ -1633,12 +1633,15 @@ int ResourceManager::initContextManager()
     int ret = 0;
 
     PAL_VERBOSE(LOG_TAG," isContextManagerEnabled: %s", isContextManagerEnabled? "true":"false");
+    PAL_ERR(LOG_TAG, "%s - %d : isContextManagerEnabled - %d", __func__,__LINE__, isContextManagerEnabled);
     if (isContextManagerEnabled) {
+        PAL_ERR(LOG_TAG, "%s - %d", __func__,__LINE__);
         ret = ctxMgr->Init();
         if (ret != 0) {
             PAL_ERR(LOG_TAG, "ContextManager init failed :%d", ret);
         }
     }
+    PAL_ERR(LOG_TAG, "%s - %d", __func__,__LINE__);
 
     return ret;
 }
@@ -6510,6 +6513,8 @@ int ResourceManager::setConfigParams(struct str_parms *parms)
     int ret = 0;
     char *kv_pairs = str_parms_to_str(parms);
 
+    PAL_ERR(LOG_TAG, "entered setConfigParams");
+    PAL_ERR(LOG_TAG, "setConfigParams kv_pairs %s", kv_pairs);
     PAL_DBG(LOG_TAG,"Enter: %s", kv_pairs);
     if(kv_pairs == NULL) {
         ret = -ENOMEM;
@@ -6528,7 +6533,10 @@ int ResourceManager::setConfigParams(struct str_parms *parms)
 
     ret = setLoggingLevelParams(parms, value, len);
 
+    PAL_ERR(LOG_TAG, "calling setContextManagerEnableParam");
     ret = setContextManagerEnableParam(parms, value, len);
+    PAL_ERR(LOG_TAG, "setContextManagerEnableParam ret %d isContextManagerEnabled %d",
+            ret, isContextManagerEnabled);
 
     ret = setUpdDedicatedBeEnableParam(parms, value, len);
     ret = setUpdCustomGainParam(parms, value, len);
@@ -6607,7 +6615,11 @@ int ResourceManager::setContextManagerEnableParam(struct str_parms *parms,
                             value, len);
     PAL_VERBOSE(LOG_TAG," value %s", value);
 
+    PAL_ERR(LOG_TAG,"%s - %d, context_manager_enable value - %s", __func__,__LINE__, value);
+
     if (ret >= 0) {
+        PAL_ERR(LOG_TAG, "%s - %d, context_manager_enable value - %s",
+                __func__, __LINE__, value);
         if (value && !strncmp(value, "true", sizeof("true")))
             isContextManagerEnabled = true;
 
@@ -8528,6 +8540,9 @@ done:
 
 void ResourceManager::processConfigParams(const XML_Char **attr)
 {
+    PAL_ERR(LOG_TAG, "processConfigParams attr %s=%s %s=%s",
+            attr[0], attr[1], attr[2], attr[3]);
+
     if (strcmp(attr[0], "key") != 0) {
         PAL_ERR(LOG_TAG,"'key' not found");
         goto done;
@@ -8539,9 +8554,12 @@ void ResourceManager::processConfigParams(const XML_Char **attr)
     }
     PAL_VERBOSE(LOG_TAG, "String %s %s %s %s ",attr[0],attr[1],attr[2],attr[3]);
     configParamKVPairs = str_parms_create();
+    PAL_ERR(LOG_TAG, "str_parms_create returned %p", configParamKVPairs);
     if (configParamKVPairs) {
         str_parms_add_str(configParamKVPairs, (char*)attr[1], (char*)attr[3]);
+        PAL_ERR(LOG_TAG, "calling setConfigParams for %s=%s", attr[1], attr[3]);
         setConfigParams(configParamKVPairs);
+        PAL_ERR(LOG_TAG, "returned from setConfigParams for %s=%s", attr[1], attr[3]);
         str_parms_destroy(configParamKVPairs);
     }
 done:
@@ -9383,6 +9401,10 @@ void ResourceManager::startTag(void *userdata, const XML_Char *tag_name,
             data->is_parsing_group_device = true;
         return;
     }
+
+    if (!strcmp(tag_name, "param"))
+        PAL_ERR(LOG_TAG, "startTag param attr %s=%s %s=%s",
+                attr[0], attr[1], attr[2], attr[3]);
 
     if (strcmp(tag_name, "device") == 0) {
         return;
