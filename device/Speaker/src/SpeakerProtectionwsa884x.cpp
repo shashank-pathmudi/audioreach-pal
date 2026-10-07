@@ -376,14 +376,6 @@ int SpeakerProtectionwsa884x::spkrStartCalibration()
 
     enableDevice(audioRoute, mSndDeviceName_vi);
 
-    PAL_DBG(LOG_TAG, "pcm start for TX path");
-    if (pcm_start(txPcm) < 0) {
-        PAL_ERR(LOG_TAG, "pcm start failed for TX path");
-        ret = -ENOSYS;
-        goto err_pcm_open;
-    }
-    isTxStarted = true;
-
     // Setup RX path
     deviceRx.id = PAL_DEVICE_OUT_SPEAKER;
     rm->getDeviceInfo(deviceRx.id, PAL_STREAM_PROXY, "", &deviceRxSpkr);
@@ -575,6 +567,8 @@ int SpeakerProtectionwsa884x::spkrStartCalibration()
         }
     }
 
+    enableDevice(audioRoute, mSndDeviceName_rx);
+
     rxPcm = pcm_open(rm->getVirtualSndCard(), pcmDevIdsRx.at(0), flags, &config);
     if (!rxPcm) {
         PAL_ERR(LOG_TAG, "pcm open failed for RX path");
@@ -588,8 +582,6 @@ int SpeakerProtectionwsa884x::spkrStartCalibration()
         goto err_pcm_open;
     }
 
-
-    enableDevice(audioRoute, mSndDeviceName_rx);
     PAL_DBG(LOG_TAG, "pcm start for RX path");
     if (pcm_start(rxPcm) < 0) {
         PAL_ERR(LOG_TAG, "pcm start failed for RX path");
@@ -597,6 +589,14 @@ int SpeakerProtectionwsa884x::spkrStartCalibration()
         goto err_pcm_open;
     }
     isRxStarted = true;
+
+    PAL_DBG(LOG_TAG, "pcm start for TX path");
+    if (pcm_start(txPcm) < 0) {
+        PAL_ERR(LOG_TAG, "pcm start failed for TX path");
+        ret = -ENOSYS;
+        goto err_pcm_open;
+    }
+    isTxStarted = true;
 
     spkrCalState = SPKR_CALIB_IN_PROGRESS;
 
@@ -650,7 +650,18 @@ err_pcm_open :
     if (calibrationCallbackStatus == CALIBRATION_STATUS_SUCCESS && dspEventReceived) {
 retry:
         PAL_DBG(LOG_TAG, "Getting temperature of speakers");
-        getSpeakerTemperatureList();
+        status = getSpeakerTemperatureList();
+        if (status) {
+            PAL_ERR(LOG_TAG, "Failed to read speaker temperatures, ret %d",
+                    status);
+            spkrCalibrateWait();
+            if (retryCount < MAX_RETRY) {
+                retryCount++;
+                goto retry;
+            }
+            else
+                goto free_fe;
+        }
 
         for (i = 0; i < numberOfChannels; i++) {
             if ((spkerTempList[i] != -EINVAL) &&
@@ -663,7 +674,7 @@ retry:
                     goto retry;
                 }
                 else
-                    continue;
+                    goto free_fe;
             }
         }
         for (i = 0; i < numberOfChannels; i++) {
@@ -834,7 +845,7 @@ int SpeakerProtectionwsa884x::viTxSetupThreadLoop()
 
 
     this->Device::getDeviceAttributes(&rxDevAttr);
-    vi_device.samplerate = rxDevAttr.config.sample_rate;
+    vi_device.samplerate = 8000;
     device.config.ch_info = ch_info;
     device.config.sample_rate = vi_device.samplerate;
     device.config.bit_width = vi_device.bit_width;

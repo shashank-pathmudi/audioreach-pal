@@ -79,7 +79,7 @@
 #include "apm_api.h"
 
 #ifndef PAL_SP_TEMP_PATH
-#define PAL_SP_TEMP_PATH "/data/misc/audio/audio.cal"
+#define PAL_SP_TEMP_PATH "/tmp/audio.cal"
 #endif
 #define FEEDBACK_MONO_1 "-mono-1"
 
@@ -233,7 +233,7 @@ public:
     virtual int spkrStartCalibration() {return 0;};
     void speakerProtectionInit();
     void speakerProtectionDeinit();
-    void getSpeakerTemperatureList();
+    int getSpeakerTemperatureList();
     static void spkrProtSetSpkrStatus(bool enable);
     static int setConfig(int type, int tag, int tagValue, int devId, const char *aif);
     bool isSpeakerInUse(unsigned long *sec);
